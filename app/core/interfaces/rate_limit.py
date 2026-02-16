@@ -2,18 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class RateLimitRepository(ABC):
-    """
-    Rate limiting uchun repository interfeysi. Turli algoritmlar uchun metodlar mavjud:
-        - increment_and_check: oddiy counter algoritmi uchun
-        - sliding_window_log: sliding window algoritmi uchun
-        - token_bucket: token bucket algoritmi uchun
-        - leaky_bucket: leaky bucket algoritmi uchun
-    # Har bir metod o'ziga xos parametrlar va qaytish qiymatlari bilan ishlaydi, bu esa algoritmlarning talablariga mos keladi.
-    Bu nega kerak? Chunki biz turli algoritmlar uchun yagona interfeys yaratmoqchimiz,
-    shunda ularni osongina almashtirish va test qilish mumkin bo'ladi.
-    Har bir algoritm o'zining maxsus logikasini amalga oshiradi,
-    lekin ular barchasi shu interfeys orqali chaqiriladi, bu esa kodning modularligini va qayta foydalanilishini oshiradi.
-    """
+    """Rate limiting algoritmlarini amalga oshirish uchun interfeys"""
 
     @abstractmethod
     async def increment_and_check(self, key: str, limit: int, window: int) -> tuple[int, int]:

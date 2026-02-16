@@ -7,7 +7,7 @@ from typing import Literal
 @dataclass
 class RateLimitRule:
     limit: int
-    window: int       # seconiyalarda
+    window: int
     algorithm: str
     key_type: str     # "ip" yoki "user"
     method: str

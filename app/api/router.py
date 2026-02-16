@@ -7,4 +7,4 @@ api_router = APIRouter()
 
 api_router.include_router(default_router)
 api_router.include_router(rate_limit)
-# include routers here later
+
