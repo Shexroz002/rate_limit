@@ -13,6 +13,10 @@ default_router = APIRouter(prefix="/api/v1")
 async def get_posts():
     return {"message": "Posts list"}
 
+@default_router.post("/posts")
+async def create_posts():
+    return {"message": "Create a new post"}
+
 @default_router.get("/users")
 async def get_users():
     return {"message": "Users list"}
@@ -23,7 +27,7 @@ async def login():
 
 @default_router.get("/rate-limited-endpoint")
 async def rate_limited_endpoint():
-    data = await redis_client.get(settings.rate_limiter_endpoint_key)
+    data = await redis_client.get("rate_limit_rules_v1")
     if data:
         # Redisda saqlangan JSON stringni dict ga o'zgartirish
         factory_endpoints = json.loads(data)

@@ -1,25 +1,31 @@
 import json
 
+from app.repositories.rate_limit.rate_limit_repository import RateLimitRepository
 from app.repositories.redis import redis_client
 
 
+from app.db.session import AsyncSessionLocal
+
 class RateLimitRuleUpdater:
-    def __init__(self, repo):
-        self.repo = repo
+    def __init__(self):
+        pass
 
     async def update_rules(self):
-        active_rules = await self.fetch_rules_from_db()
-        await self.update_redis(active_rules)
+        async with AsyncSessionLocal() as db:
+            repo = RateLimitRepository(db)
 
-    async def fetch_rules_from_db(self) -> dict:
-        rules = await self.repo.get_active_rules()
+            active_rules = await self.fetch_rules_from_db(repo)
+            await self.update_redis(active_rules)
+
+    async def fetch_rules_from_db(self, repo) -> dict:
+        rules = await repo.get_active_rules()
         return {
             rule.path: {
                 "limit": rule.limit,
-                "window": rule.window,
+                "window": rule.window_seconds,
                 "algorithm": rule.algorithm,
                 "key_type": rule.key_type,
-                "method": rule.method
+                "method": rule.method,
             }
             for rule in rules
         }

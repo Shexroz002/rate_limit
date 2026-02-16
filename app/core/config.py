@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     # Rate Limiting
     rate_limit_algorithm: str = "fixed_window"  # fixed_window, sliding_window_log, token_bucket
-    default_rate_limit: int = 100               # So‘rovlar soni
+    default_rate_limit: int = 10               # So‘rovlar soni
     default_rate_limit_window: int = 60         # soniyalarda
 
     # Logging

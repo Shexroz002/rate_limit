@@ -1,30 +1,37 @@
 from typing import Optional
 from app.core.config import settings
-from app.core.entities import RequestInfo
+from app.core.entities import RequestInfo, EndpointRateLimitConfig
 from app.services.rate_limit.factory import AlgorithmFactory
 from app.repositories.redis import RedisRateLimitRepository
 
 
 class RateLimiterService:
-    """
-        Core service that handles rate limiting logic. It uses the configured algorithm
-        to check if a request is allowed based on the user's ID or IP address.
-        The service can also accept custom limits and windows for specific endpoints.
-    """
-
     def __init__(self, repo: RedisRateLimitRepository):
         self.repo = repo
-        self.algorithm = AlgorithmFactory.create(settings.rate_limit_algorithm, repo)
 
-    async def is_allowed(self, request_info: RequestInfo,
-                         custom_limit: Optional[int] = None,
-                         custom_window: Optional[int] = None) -> tuple[bool, int]:
+    async def is_allowed(
+            self,
+            request_info: RequestInfo,
+            endpoint_config: Optional[EndpointRateLimitConfig] = None
+    ) -> tuple[bool, int]:
 
-        if request_info.user_id:
-            key = f"rate_limit:user:{request_info.user_id}"
+        if endpoint_config:
+            limit = endpoint_config.limit
+            window = endpoint_config.window
+            algorithm_name = endpoint_config.algorithm
+            key_type = endpoint_config.key_type
         else:
-            key = f"rate_limit:ip:{request_info.client_ip}"
+            limit = settings.default_rate_limit
+            window = settings.default_rate_limit_window
+            algorithm_name = settings.rate_limit_algorithm
+            key_type = "ip"
 
-        limit = custom_limit or settings.default_rate_limit
-        window = custom_window or settings.default_rate_limit_window
-        return await self.algorithm.check(key, limit, window)
+        if key_type == "user" and request_info.user_id:
+            identifier = request_info.user_id
+            key = f"rate_limit:user:{identifier}:{request_info.endpoint}:{request_info.method}"
+        else:
+            identifier = request_info.client_ip
+            key = f"rate_limit:ip:{identifier}:{request_info.endpoint}:{request_info.method}"
+
+        algorithm = AlgorithmFactory.create(algorithm_name, self.repo)
+        return await algorithm.check(key, limit, window)
